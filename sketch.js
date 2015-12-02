@@ -14,13 +14,14 @@ var particles = [];
 var counts;
 var countm;
 var counth;
+var testFlag = false;
 
 function setup() {
   createCanvas(windowWidth,windowHeight);
 
   // Initialize box2d physics and create the world
   world = createWorld();
-  console.log( hour());
+  //console.log( hour());
 
   //world.SetContactListener(new CustomListener());
 
@@ -31,64 +32,58 @@ function setup() {
   boundaries.push(new Boundary(width-5,height/2,10,height,0));
   boundaries.push(new Boundary(5,height/2,10,height,0));
 
- counts = second();
- countm = minute();
- counth = hour();
+  counts = second();
+  countm = minute();
+  counth = hour();
 
 }
 
 function draw() {
+  
   var s = second();
   var m = minute();
   var h = hour();
   background(51);
 
-
+  // Print current second
+  console.log("Current second = " + second())
 
   // We must always step through time!
   var timeStep = 1.0/60;
+  
   // 2nd and 3rd arguments are velocity and position iterations
   world.Step(timeStep,10,10);
 
-if (counts != s){
-  var sz = random(7,8);
-
-
-    particles.push(new Particle(random(width), (height/2), sz, 10));
-
-  //particles.push(new Particle(random(width), (height-(height/10)), sz, 10));
-  counts = s;
-}
-
-  // if (random(1.5) < 0.1) {
-  //   var sz = random(4,8);
-  //   particles.push(new Particle(random(width), 20, sz, 10));
-  // }
-
-  // Heure actuelle
-  setGravity(hour())
-
-  // 9 h
-  //setGravity(9)
-
-  // 6 h
-  //setGravity(6)
-
-  // 12 h
-  //setGravity(12)
-
-  // Look at all particles
-  for (var i = particles.length-1; i >= 0; i--) {
-    particles[i].display();
-    // Particles that leave the screen, we delete them
-    // (note they have to be deleted from both the box2d world and our list
-    if (counts == 59) {particles.splice(i,1);}
-    if (particles[i].done()) {
-      particles.splice(i,1);
-    }
+  // Add a now particle each second
+  if (counts != second()){
+      particles.push(new Particle(random(width), (height/2), random(7,8), 10));
+      counts = second();
   }
 
-   // Draw the boundaries
+  // Set the cgravity direction according to the current hour
+  setGravity(hour())
+
+  // Loop over each particule
+  for (var i = particles.length-1; i >= 0; i--) {
+    
+    // Display the particule
+    particles[i].display();
+    
+    // Delete the particule if it has left the screen
+    if (particles[i].done()) {
+      console.log("Particule " + i + " left the screen, and is going to be deleted")
+      particles.splice(i,1);
+    }
+    
+    // Delete the particules before the next minute start
+    if (counts == 59) {
+      particles[i].killBody()
+      particles.splice(i,1);
+    }
+
+  }
+
+  // Draw the boundaries
   for (var j = 0; j < boundaries.length; j++) {
     boundaries[j].display();
   }
@@ -110,7 +105,7 @@ function setGravity(local_hour) {
 
   // Modulo sur l'heure pour avoir des valeurs entre 0 et 11
   local_hour = local_hour % 12
-  console.log(local_hour)
+  
   //Calcule l'angle de la nouvelle gravité en degrés
   gravityAngle = local_hour/12*360
 
